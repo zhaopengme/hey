@@ -15,18 +15,21 @@
 // Package requester provides commands to run load tests and display results.
 package requester
 
+
+
 import (
 	"bytes"
 	"crypto/tls"
+	"github.com/google/uuid"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptrace"
 	"net/url"
 	"os"
+	"strings"
 	"sync"
 	"time"
-
 	"golang.org/x/net/http2"
 )
 
@@ -274,7 +277,14 @@ func cloneRequest(r *http.Request, body []byte) *http.Request {
 		r2.Header[k] = append([]string(nil), s...)
 	}
 	if len(body) > 0 {
-		r2.Body = ioutil.NopCloser(bytes.NewReader(body))
+		var bodyString string
+		bodyString = string(body)
+		var uuidCount int
+		uuidCount = strings.Count(bodyString, "{hey_uuid}")
+		for i := 0; i < uuidCount; i++ {
+			bodyString = strings.Replace(bodyString, "{hey_uuid}", uuid.New().String(), 1)
+		}
+		r2.Body = ioutil.NopCloser(bytes.NewReader([]byte(bodyString)))
 	}
 	return r2
 }
